@@ -6,4 +6,6 @@ class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
         super(FuzzerStrategy, self).__init__()
         self.acceptedOptions = ['--common-words']
+
         self.urlsQueue = deque()
+        self.urlsQueue.append(args[0])
