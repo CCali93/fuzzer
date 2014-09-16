@@ -1,6 +1,9 @@
-class DiscoverStrategy:
-    def __init__(self, args):
-        self.argsDictionary = self.parseArgs(args)
+from collections import deque
 
-    def parseArgs(self, args):
-        return {}
+from fuzzerstrategy import FuzzerStrategy
+
+class DiscoverStrategy(FuzzerStrategy):
+    def __init__(self, args):
+        super(FuzzerStrategy, self).__init__()
+        self.acceptedOptions = ['--common-words']
+        self.urlsQueue = deque()
