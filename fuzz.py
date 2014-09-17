@@ -1,6 +1,10 @@
+#!/usr/bin/python3
+
 import sys
 
 from discoverstrategy import DiscoverStrategy
+
+_USAGE_MESSAGE = "USAGE fuzz [discover | test] url OPTIONS"
 
 def main(args):
     command = args[0]
@@ -9,10 +13,13 @@ def main(args):
     if command == "discover":
         strategy = DiscoverStrategy(args[1:])
     else:
-        print("USAGE fuzz [discover | test] url OPTIONS")
+        print(_USAGE_MESSAGE)
 
     if strategy is not None:
         strategy.execute()
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    if len(sys.argv) >= 2:
+        main(sys.argv[1:])
+    else:
+        print(_USAGE_MESSAGE)

@@ -16,12 +16,6 @@ class DiscoverStrategy(FuzzerStrategy):
 
         self.sourceUrl = args[0]
 
-        self.discoveredUrls = set()
-        self.discoveredUrls.add(self.sourceUrl)
-
-        self.urlsQueue = deque()
-        self.urlsQueue.append(self.sourceUrl)
-
         for arg in args[1:]:
             argValuePair = arg.split('=')
             argName  = argValuePair[0]
@@ -31,9 +25,7 @@ class DiscoverStrategy(FuzzerStrategy):
                 optionCommands[argName](argValue)
 
     def execute(self):
-        while len(self.urlsQueue):
-            url = self.urlsQueue.popleft()
-            print(url)
+        response = requests.get(self.sourceUrl)
 
     def parseCommonWords(self, wordFile):
         pass

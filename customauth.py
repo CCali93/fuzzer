@@ -1,0 +1,4 @@
+authConfig = {
+    'dvwa': (),
+    'dodgeit': ()
+}
