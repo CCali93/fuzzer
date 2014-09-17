@@ -2,14 +2,12 @@ import requests
 
 from collections import deque
 from lxml import html
-import urlparse
 
 from fuzzerstrategy import FuzzerStrategy
 
 class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
-        super(FuzzerStrategy, self).__init__()
-        self.acceptedOptions = ['--common-words']
+        acceptedOptions = ['--custom-auth', '--common-words'];
         self.sourceUrl = args[0]
 
         self.discoveredUrls = set()
@@ -18,7 +16,11 @@ class DiscoverStrategy(FuzzerStrategy):
         self.urlsQueue = deque()
         self.urlsQueue.append(self.sourceUrl)
 
-    def execute():
+        for arg in args[1:]:
+            argValuePair = arg.split('=')
+            print("option: %s\tvalue:%s" % (argValuePair[0], argValuePair[1]))
+
+    def execute(self):
         while len(self.urlsQueue):
             url = self.urlsQueue.popleft()
             print(url)

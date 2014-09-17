@@ -1,6 +1,3 @@
 class FuzzerStrategy:
-    def __init__(self):
-        self.acceptedOptions = []
-
-    def execute():
-        return None
+    def execute(self):
+        raise NotImplementedError( "execute needs to be implemented" )

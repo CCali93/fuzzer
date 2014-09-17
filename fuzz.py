@@ -3,7 +3,7 @@ import sys
 from discoverstrategy import DiscoverStrategy
 
 def main(args):
-    command = arg[0]
+    command = args[0]
     strategy = None
 
     if command == "discover":
@@ -11,7 +11,8 @@ def main(args):
     else:
         print("USAGE fuzz [discover | test] url OPTIONS")
 
-    strategy.execute()
+    if strategy is not None:
+        strategy.execute()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
