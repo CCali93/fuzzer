@@ -2,6 +2,7 @@ import requests
 
 from collections import deque
 from lxml import html
+from urllib.parse import urlparse
 
 from fuzzerstrategy import FuzzerStrategy
 
