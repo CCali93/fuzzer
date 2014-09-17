@@ -8,7 +8,12 @@ from fuzzerstrategy import FuzzerStrategy
 
 class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
-        acceptedOptions = ['--custom-auth', '--common-words'];
+        super(DiscoverStrategy, self).__init__()
+        optionCommands = {
+            '--custom-auth': self.parseCommonWords,
+            '--common-words': self.parseCustomAuth
+        }
+
         self.sourceUrl = args[0]
 
         self.discoveredUrls = set()
@@ -19,9 +24,19 @@ class DiscoverStrategy(FuzzerStrategy):
 
         for arg in args[1:]:
             argValuePair = arg.split('=')
-            print("option: %s\tvalue:%s" % (argValuePair[0], argValuePair[1]))
+            argName  = argValuePair[0]
+            argValue = argValuePair[1]
+
+            if argName in optionCommands:
+                optionCommands[argName](argValue)
 
     def execute(self):
         while len(self.urlsQueue):
             url = self.urlsQueue.popleft()
             print(url)
+
+    def parseCommonWords(self, wordFile):
+        pass
+    
+    def parseCustomAuth(self, authString):
+        pass
