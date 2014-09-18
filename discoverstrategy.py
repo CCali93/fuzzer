@@ -16,6 +16,11 @@ class DiscoverStrategy(FuzzerStrategy):
 
         self.sourceUrl = args[0]
 
+        self.urlQueue = deque()
+        self.urlQueue.append(self.sourceUrl)
+
+        self.discoveredUrls = {self.sourceUrl}
+
         for arg in args[1:]:
             argValuePair = arg.split('=')
             argName  = argValuePair[0]
@@ -25,7 +30,23 @@ class DiscoverStrategy(FuzzerStrategy):
                 optionCommands[argName](argValue)
 
     def execute(self):
-        response = requests.get(self.sourceUrl)
+        while len(self.urlQueue):
+            url = self.urlQueue.popleft()
+            response = requests.get(url)
+
+            parsedBody = html.fromstring(response.content)
+            print(parsedBody.xpath("//title/text()"))
+
+            links = {
+                urlparse.urljoin(response.url, url) for url in
+                    parsedBody.xpath('//a/@href') if
+                    urlparse.urljoin(response.url, url).startswith('http')
+            }
+
+            # Set difference to find new URLs
+            for link in (links - self.discoveredUrls):
+                self.discoveredUrls.add(link)
+                self.urlQueue.append(link)
 
     def parseCommonWords(self, wordFile):
         pass
