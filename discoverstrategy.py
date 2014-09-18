@@ -21,6 +21,8 @@ class DiscoverStrategy(FuzzerStrategy):
 
         self.discoveredUrls = {self.sourceUrl}
 
+        self.systemInputs = set()
+
         for arg in args[1:]:
             argValuePair = arg.split('=')
             argName  = argValuePair[0]

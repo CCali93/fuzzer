@@ -1,4 +1,4 @@
 authConfig = {
-    'dvwa': (),
+    'dvwa': ('admin', 'password'),
     'dodgeit': ()
 }
