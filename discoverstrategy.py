@@ -39,6 +39,8 @@ class DiscoverStrategy(FuzzerStrategy):
             parsedBody = html.fromstring(response.content)
             print(parsedBody.xpath("//title/text()"))
 
+            formInputs = parsedBody.xpath("//input")
+
             links = {
                 urlparse.urljoin(response.url, url) for url in
                     parsedBody.xpath('//a/@href') if
