@@ -21,7 +21,7 @@ class DiscoverStrategy(FuzzerStrategy):
 
         self.discoveredUrls = {self.sourceUrl}
 
-        self.systemInputs = set()
+        self.systemInputs = {}
 
         for arg in args[1:]:
             argValuePair = arg.split('=')
@@ -32,25 +32,34 @@ class DiscoverStrategy(FuzzerStrategy):
                 optionCommands[argName](argValue)
 
     def execute(self):
-        while len(self.urlQueue):
-            url = self.urlQueue.popleft()
-            response = requests.get(url)
+        response = requests.get(self.sourceUrl)
 
-            parsedBody = html.fromstring(response.content)
-            print(parsedBody.xpath("//title/text()"))
+        parsedBody = html.fromstring(response.content)
+        print(parsedBody.xpath("//title/text()")[0])
 
-            formInputs = parsedBody.xpath("//input")
+        print("\tForm Inputs:")
 
-            links = {
-                urlparse.urljoin(response.url, url) for url in
-                    parsedBody.xpath('//a/@href') if
-                    urlparse.urljoin(response.url, url).startswith('http')
-            }
+        self.systemInputs[self.sourceUrl] = parsedBody.xpath("//input")
+        for inputElem in self.systemInputs[self.sourceUrl]:
+            print("\t\t" + (str(inputElem)))
 
-            # Set difference to find new URLs
-            for link in (links - self.discoveredUrls):
-                self.discoveredUrls.add(link)
-                self.urlQueue.append(link)
+        print("\tCookies:")
+        cookieList = response.cookies
+        for (key, value) in cookieList:
+            print("\t\t%s: %s" % (key, value))
+
+        """
+        links = {
+            urlparse.urljoin(response.url, url) for url in
+                parsedBody.xpath('//a/@href') if
+                urlparse.urljoin(response.url, url).startswith('http')
+        }
+
+        # Set difference to find new URLs
+        for link in (links - self.discoveredUrls):
+            self.discoveredUrls.add(link)
+            self.urlQueue.append(link)
+        """
 
     def parseCommonWords(self, wordFile):
         pass
