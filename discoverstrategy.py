@@ -1,18 +1,17 @@
 import requests
+from requests.auth import HTTPDigestAuth
 
 from collections import deque
 from lxml import html
 from urllib.parse import urlparse
 
+import customauth
 from fuzzerstrategy import FuzzerStrategy
 
 class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
         super(DiscoverStrategy, self).__init__()
-        optionCommands = {
-            '--custom-auth': self.parseCommonWords,
-            '--common-words': self.parseCustomAuth
-        }
+        self.authTuple = ()
 
         self.sourceUrl = args[0]
 
@@ -28,11 +27,16 @@ class DiscoverStrategy(FuzzerStrategy):
             argName  = argValuePair[0]
             argValue = argValuePair[1]
 
-            if argName in optionCommands:
-                optionCommands[argName](argValue)
+            if argName == '--custom-auth':
+                self.parseCustomAuth(argValue)
+            elif argName == '--common-words':
+                pass
 
     def execute(self):
-        response = requests.get(self.sourceUrl)
+        response = requests.get(
+            self.sourceUrl,
+            auth=HTTPDigestAuth(self.authTuple[0], self.authTuple[1])
+        )
 
         parsedBody = html.fromstring(response.content)
         print(parsedBody.xpath("//title/text()")[0])
@@ -48,21 +52,13 @@ class DiscoverStrategy(FuzzerStrategy):
         for (key, value) in cookieList:
             print("\t\t%s: %s" % (key, value))
 
-        """
-        links = {
-            urlparse.urljoin(response.url, url) for url in
-                parsedBody.xpath('//a/@href') if
-                urlparse.urljoin(response.url, url).startswith('http')
-        }
-
-        # Set difference to find new URLs
-        for link in (links - self.discoveredUrls):
-            self.discoveredUrls.add(link)
-            self.urlQueue.append(link)
-        """
+        print(parsedBody.xpath('//a/@href'))
 
     def parseCommonWords(self, wordFile):
         pass
     
     def parseCustomAuth(self, authString):
-        pass
+        if authString in customauth.authConfig:
+            self.authTuple = customauth.authConfig[authString]
+        else:
+            self.authTuple = ()
