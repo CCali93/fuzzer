@@ -33,12 +33,13 @@ class DiscoverStrategy(FuzzerStrategy):
                 pass
 
     def execute(self):
-        response = requests.get(
-            self.sourceUrl,
-            auth=HTTPDigestAuth(self.authTuple[0], self.authTuple[1])
-        )
-
+        response = requests.get(self.sourceUrl)
         parsedBody = html.fromstring(response.content)
+
+        if self._containsLoginForm(parsedBody):
+            #perform authentication here
+            print("This is a login page")
+        
         print(parsedBody.xpath("//title/text()")[0])
 
         print("\tForm Inputs:")
@@ -62,3 +63,8 @@ class DiscoverStrategy(FuzzerStrategy):
             self.authTuple = customauth.authConfig[authString]
         else:
             self.authTuple = ()
+
+    def _containsLoginForm(self, htmlBody):
+        loginButtons = htmlBody.xpath("//input[@name='Login']")
+
+        return len(loginButtons) >= 1
