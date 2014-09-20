@@ -3,7 +3,7 @@ from requests.auth import HTTPDigestAuth
 
 from collections import deque
 from lxml import html
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 import customauth
 from fuzzerstrategy import FuzzerStrategy
@@ -33,18 +33,14 @@ class DiscoverStrategy(FuzzerStrategy):
                 pass
 
     def execute(self):
-        response = requests.get(self.sourceUrl)
+        session = requests.session()
+        response = session.get(self.sourceUrl)
         parsedBody = html.fromstring(response.content)
 
         if self._containsLoginForm(parsedBody):
-            #perform authentication here
-            loginForm = self._getLoginForms(parsedBody)[0]
-            loginForm.fields['username'] = self.authTuple[0]
-            loginForm.fields['password'] = self.authTuple[1]
-
-            html.submit_form(loginForm)
-        
-        response = requests.get(self.sourceUrl)
+            self._login(session, parsedBody)
+      
+        response = session.get(self.sourceUrl)
 
         print(parsedBody.xpath("//title/text()")[0])
 
@@ -69,6 +65,12 @@ class DiscoverStrategy(FuzzerStrategy):
             self.authTuple = customauth.authConfig[authString]
         else:
             self.authTuple = ()
+
+    def _login(self, session, parsedBody):
+        #perform authentication here
+        loginForm = self._getLoginForms(parsedBody)[0]
+
+        return loginSuccess
 
     def _getLoginForms(self, htmlBody):
         return htmlBody.xpath("//form[descendant::input[@name='Login']]")
