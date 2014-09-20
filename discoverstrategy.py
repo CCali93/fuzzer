@@ -39,8 +39,13 @@ class DiscoverStrategy(FuzzerStrategy):
         if self._containsLoginForm(parsedBody):
             #perform authentication here
             loginForm = self._getLoginForms(parsedBody)[0]
-            print("This is a login page")
+            loginForm.fields['username'] = self.authTuple[0]
+            loginForm.fields['password'] = self.authTuple[1]
+
+            html.submit_form(loginForm)
         
+        response = requests.get(self.sourceUrl)
+
         print(parsedBody.xpath("//title/text()")[0])
 
         print("\tForm Inputs:")
