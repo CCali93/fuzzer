@@ -1,4 +1,4 @@
-authConfig = {
+authconfig = {
     'dvwa': ('admin', 'password'),
     'dodgeit': ()
 }

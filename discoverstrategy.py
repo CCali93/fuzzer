@@ -11,43 +11,43 @@ from fuzzerstrategy import FuzzerStrategy
 class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
         super(DiscoverStrategy, self).__init__()
-        self.authTuple = ()
+        self.auth_tuple = ()
 
-        self.sourceUrl = args[0]
+        self.source_url = args[0]
 
-        self.urlQueue = deque()
-        self.urlQueue.append(self.sourceUrl)
+        self.urlqueue = deque()
+        self.urlqueue.append(self.source_url)
 
-        self.discoveredUrls = {self.sourceUrl}
+        self.discoveredUrls = {self.source_url}
 
-        self.systemInputs = {}
+        self.system_inputs = {}
 
         for arg in args[1:]:
-            argValuePair = arg.split('=')
-            argName  = argValuePair[0]
-            argValue = argValuePair[1]
+            arg_value_pair = arg.split('=')
+            argname  = arg_value_pair[0]
+            argvalue = arg_value_pair[1]
 
-            if argName == '--custom-auth':
-                self.parseCustomAuth(argValue)
-            elif argName == '--common-words':
-                pass
+            if argname == '--custom-auth':
+                self._parse_custom_auth(argvalue)
+            elif argname == '--common-words':
+                self._parse_common_words(argvalue)
 
     def execute(self):
         session = requests.session()
-        response = session.get(self.sourceUrl)
+        response = session.get(self.source_url)
         parsedBody = html.fromstring(response.content)
 
-        if self._containsLoginForm(parsedBody):
+        if self._contains_login_form(parsedBody):
             self._login(session, parsedBody)
       
-        response = session.get(self.sourceUrl)
+        response = session.get(self.source_url)
 
         print(parsedBody.xpath("//title/text()")[0])
 
         print("\tForm Inputs:")
 
-        self.systemInputs[self.sourceUrl] = parsedBody.xpath("//input")
-        for inputElem in self.systemInputs[self.sourceUrl]:
+        self.system_inputs[self.source_url] = parsedBody.xpath("//input")
+        for inputElem in self.system_inputs[self.source_url]:
             print("\t\t" + (str(inputElem)))
 
         print("\tCookies:")
@@ -57,25 +57,32 @@ class DiscoverStrategy(FuzzerStrategy):
 
         print(parsedBody.xpath('//a/@href'))
 
-    def parseCommonWords(self, wordFile):
-        pass
+    def _parse_common_words(self, wordFile):
+        print("Common words parsed")
     
-    def parseCustomAuth(self, authString):
-        if authString in customauth.authConfig:
-            self.authTuple = customauth.authConfig[authString]
+    def _parse_custom_auth(self, auth_string):
+        if auth_string in customauth.authconfig:
+            self.auth_tuple = customauth.authconfig[auth_string]
         else:
-            self.authTuple = ()
+            self.auth_tuple = ()
 
     def _login(self, session, parsedBody):
         #perform authentication here
-        loginForm = self._getLoginForms(parsedBody)[0]
+        login_form = self._get_login_forms(parsedBody)[0]
 
-        return loginSuccess
+        login_url = ''
+        if self.source_url.endswith('/'):
+            login_url = urljoin(self.source_url, login_form.action)
+        else:
+           login_url = urljoin(self.source_url + '/', login_form.action)
+        
+        login_data = dict(username='', password='', Login='Login')
+        session.post(login_url, data=login_data)
 
-    def _getLoginForms(self, htmlBody):
+    def _get_login_forms(self, htmlBody):
         return htmlBody.xpath("//form[descendant::input[@name='Login']]")
 
-    def _containsLoginForm(self, htmlBody):
-        loginForms = htmlBody.xpath("//form[descendant::input[@name='Login']]")
+    def _contains_login_form(self, htmlBody):
+        login_forms = htmlBody.xpath("//form[descendant::input[@name='Login']]")
 
-        return len(loginForms) >= 1
+        return len(login_forms) >= 1
