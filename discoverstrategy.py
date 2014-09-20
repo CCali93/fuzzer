@@ -38,6 +38,7 @@ class DiscoverStrategy(FuzzerStrategy):
 
         if self._containsLoginForm(parsedBody):
             #perform authentication here
+            loginForm = self._getLoginForms(parsedBody)[0]
             print("This is a login page")
         
         print(parsedBody.xpath("//title/text()")[0])
@@ -64,7 +65,10 @@ class DiscoverStrategy(FuzzerStrategy):
         else:
             self.authTuple = ()
 
-    def _containsLoginForm(self, htmlBody):
-        loginButtons = htmlBody.xpath("//input[@name='Login']")
+    def _getLoginForms(self, htmlBody):
+        return htmlBody.xpath("//form[descendant::input[@name='Login']]")
 
-        return len(loginButtons) >= 1
+    def _containsLoginForm(self, htmlBody):
+        loginForms = htmlBody.xpath("//form[descendant::input[@name='Login']]")
+
+        return len(loginForms) >= 1
