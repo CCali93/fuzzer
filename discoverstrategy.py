@@ -11,6 +11,8 @@ from fuzzerstrategy import FuzzerStrategy
 class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
         super(DiscoverStrategy, self).__init__()
+
+        self.is_logged_in = False
         self.auth_tuple = ()
 
         self.source_url = args[0]
@@ -35,18 +37,19 @@ class DiscoverStrategy(FuzzerStrategy):
     def execute(self):
         session = requests.session()
         response = session.get(self.source_url)
-        parsedBody = html.fromstring(response.content)
+        parsed_body = html.fromstring(response.content)
 
-        if self._contains_login_form(parsedBody):
-            self._login(session, parsedBody)
-      
+        if self._contains_login_form(parsed_body) and not self.is_logged_in:
+            self._login(session, parsed_body)
+        
+        response = session.get(self.source_url)
+        parsed_body = html.fromstring(response.content)
+        print(parsed_body.xpath("//title/text()")[0])
+
         response = session.get(self.source_url)
 
-        print(parsedBody.xpath("//title/text()")[0])
-
         print("\tForm Inputs:")
-
-        self.system_inputs[self.source_url] = parsedBody.xpath("//input")
+        self.system_inputs[self.source_url] = parsed_body.xpath("//input")
         for inputElem in self.system_inputs[self.source_url]:
             print("\t\t" + (str(inputElem)))
 
@@ -54,8 +57,6 @@ class DiscoverStrategy(FuzzerStrategy):
         cookieList = response.cookies
         for (key, value) in cookieList:
             print("\t\t%s: %s" % (key, value))
-
-        print(parsedBody.xpath('//a/@href'))
 
     def _parse_common_words(self, wordFile):
         print("Common words parsed")
@@ -66,17 +67,21 @@ class DiscoverStrategy(FuzzerStrategy):
         else:
             self.auth_tuple = ()
 
-    def _login(self, session, parsedBody):
+    def _login(self, session, parsed_body):
         #perform authentication here
-        login_form = self._get_login_forms(parsedBody)[0]
+        login_form = self._get_login_forms(parsed_body)[0]
 
         login_url = ''
         if self.source_url.endswith('/'):
             login_url = urljoin(self.source_url, login_form.action)
         else:
            login_url = urljoin(self.source_url + '/', login_form.action)
-        
-        login_data = dict(username='', password='', Login='Login')
+
+        login_data = dict(
+            username=self.auth_tuple[0],
+            password=self.auth_tuple[1],
+            Login='Login'
+        )
         session.post(login_url, data=login_data)
 
     def _get_login_forms(self, htmlBody):
