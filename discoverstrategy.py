@@ -7,6 +7,7 @@ from urllib.parse import urlparse, urljoin
 
 import customauth
 from fuzzerstrategy import FuzzerStrategy
+from helpers import get_url_domain, is_absolute_url
 
 class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
@@ -41,6 +42,8 @@ class DiscoverStrategy(FuzzerStrategy):
 
         if self._contains_login_form(parsed_body) and not self.is_logged_in:
             self._login(session, parsed_body)
+        else:
+            self.is_logged_in = True
         
         response = session.get(self.source_url)
         parsed_body = html.fromstring(response.content)
@@ -50,15 +53,28 @@ class DiscoverStrategy(FuzzerStrategy):
 
         print("\tForm Inputs:")
         self.system_inputs[self.source_url] = parsed_body.xpath("//input")
-        for inputElem in self.system_inputs[self.source_url]:
-            print("\t\t" + (str(inputElem)))
+        for input_elem in self.system_inputs[self.source_url]:
+            print("\t\t" + (str(input_elem)))
 
         print("\tCookies:")
-        cookieList = response.cookies
-        for (key, value) in cookieList:
+        cookie_list = response.cookies
+        for (key, value) in cookie_list:
             print("\t\t%s: %s" % (key, value))
 
-    def _parse_common_words(self, wordFile):
+        print("\tLinks:")
+        all_links = filter(
+            lambda url: self._is_valid_page_link(url),
+            parsed_body.xpath("//a/@href")
+        )
+        for link in all_links:
+            absolute_link = ''
+            if self.source_url.endswith('/'):
+                absolute_link = urljoin(self.source_url, link)
+            else:
+               absolute_link = urljoin(self.source_url + '/', link)
+            print("\t\t%s" % (absolute_link))
+
+    def _parse_common_words(self, word_file):
         print("Common words parsed")
     
     def _parse_custom_auth(self, auth_string):
@@ -69,25 +85,36 @@ class DiscoverStrategy(FuzzerStrategy):
 
     def _login(self, session, parsed_body):
         #perform authentication here
-        login_form = self._get_login_forms(parsed_body)[0]
+        if self.auth_tuple != ():
+            login_form = self._get_login_forms(parsed_body)[0]
 
-        login_url = ''
-        if self.source_url.endswith('/'):
-            login_url = urljoin(self.source_url, login_form.action)
+            login_url = ''
+            if self.source_url.endswith('/'):
+                login_url = urljoin(self.source_url, login_form.action)
+            else:
+               login_url = urljoin(self.source_url + '/', login_form.action)
+
+            login_data = dict(
+                username=self.auth_tuple[0],
+                password=self.auth_tuple[1],
+                Login='Login'
+            )
+            login_response = session.post(login_url, data=login_data)
+            self.is_logged_in = login_response.status_code == 200
         else:
-           login_url = urljoin(self.source_url + '/', login_form.action)
+            self.is_logged_in = True
 
-        login_data = dict(
-            username=self.auth_tuple[0],
-            password=self.auth_tuple[1],
-            Login='Login'
-        )
-        session.post(login_url, data=login_data)
 
-    def _get_login_forms(self, htmlBody):
-        return htmlBody.xpath("//form[descendant::input[@name='Login']]")
+    def _get_login_forms(self, html_body):
+        return html_body.xpath("//form[descendant::input[@name='Login']]")
 
-    def _contains_login_form(self, htmlBody):
-        login_forms = htmlBody.xpath("//form[descendant::input[@name='Login']]")
+    def _contains_login_form(self, html_body):
+        login_forms = html_body.xpath("//form[descendant::input[@name='Login']]")
 
         return len(login_forms) >= 1
+
+    def _is_valid_page_link(self, url):
+        self_domain = self.source_url if\
+            self.source_url.endswith('/') else self.source_url + '/'
+
+        return (not is_absolute_url(url)) or get_url_domain(url) == self_domain
