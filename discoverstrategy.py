@@ -21,7 +21,7 @@ class DiscoverStrategy(FuzzerStrategy):
         self.urlqueue = deque()
         self.urlqueue.append(self.source_url)
 
-        self.discoveredUrls = {self.source_url}
+        self.discovered_urls = {self.source_url}
 
         self.system_inputs = {}
 
