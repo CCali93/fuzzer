@@ -62,9 +62,11 @@ class DiscoverStrategy(FuzzerStrategy):
             print("\t\t%s: %s" % (key, value))
 
         print("\tLinks:")
-        all_links = filter(
-            lambda url: self._is_valid_page_link(url),
-            parsed_body.xpath("//a/@href")
+        all_links = set(
+            filter(
+                lambda url: self._is_valid_page_link(url),
+                parsed_body.xpath("//a/@href")
+            )
         )
         for link in all_links:
             absolute_link = ''
