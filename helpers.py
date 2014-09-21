@@ -14,5 +14,9 @@ def get_url_params(url):
         params.append(key)
     return params
 
+def trim_url_params(url):
+    parsed_url = urlparse(url)
+    return parsed_url.netloc + parsed_url.path
+
 def is_absolute_url(url):
     return bool(urlparse(url).netloc)

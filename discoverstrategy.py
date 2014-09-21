@@ -7,7 +7,7 @@ from urllib.parse import urlparse, urljoin
 
 import customauth
 from fuzzerstrategy import FuzzerStrategy
-from helpers import get_url_domain, is_absolute_url
+from helpers import get_url_domain, is_absolute_url, get_url_params
 
 class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
@@ -52,8 +52,10 @@ class DiscoverStrategy(FuzzerStrategy):
         response = session.get(self.source_url)
 
         print("\tForm Inputs:")
-        self.system_inputs[self.source_url] = parsed_body.xpath("//input")
-        for input_elem in self.system_inputs[self.source_url]:
+        self.system_inputs[self.source_url] = {
+            'forminput': parsed_body.xpath("//input")
+        }
+        for input_elem in self.system_inputs[self.source_url]['forminput']:
             print("\t\t" + (str(input_elem)))
 
         print("\tCookies:")
@@ -62,6 +64,7 @@ class DiscoverStrategy(FuzzerStrategy):
             print("\t\t%s: %s" % (key, value))
 
         print("\tLinks:")
+        self.system_inputs[self.source_url]['urlparams'] = []
         all_links = set(
             filter(
                 lambda url: self._is_valid_page_link(url),
@@ -74,7 +77,13 @@ class DiscoverStrategy(FuzzerStrategy):
                 absolute_link = urljoin(self.source_url, link)
             else:
                absolute_link = urljoin(self.source_url + '/', link)
+            self.system_inputs[self.source_url]['urlparams'].extend(
+                get_url_params(
+                    absolute_link
+                )
+            )
             print("\t\t%s" % (absolute_link))
+
 
     def _parse_common_words(self, word_file):
         print("Common words parsed")
@@ -105,7 +114,6 @@ class DiscoverStrategy(FuzzerStrategy):
             self.is_logged_in = login_response.status_code == 200
         else:
             self.is_logged_in = True
-
 
     def _get_login_forms(self, html_body):
         return html_body.xpath("//form[descendant::input[@name='Login']]")
