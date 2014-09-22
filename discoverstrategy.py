@@ -180,3 +180,8 @@ class DiscoverStrategy(FuzzerStrategy):
             self.source_url.endswith('/') else self.source_url + '/'
 
         return (not is_absolute_url(url)) or get_url_domain(url) == self_domain
+
+    #Finds all links on the current page
+    def _find_links(self,url):
+        links = []
+        return links
