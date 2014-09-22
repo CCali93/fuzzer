@@ -5,7 +5,7 @@ from collections import deque
 from lxml import html
 from urllib.parse import urlparse, urljoin
 
-import customauth
+from customauth import get_auth_info
 from fuzzerstrategy import FuzzerStrategy
 from helpers import get_url_domain, is_absolute_url, get_url_params,\
     trim_url_params
@@ -36,9 +36,7 @@ class DiscoverStrategy(FuzzerStrategy):
             argvalue = arg_value_pair[1]
 
             if argname == '--custom-auth':
-                self._parse_custom_auth(argvalue)
-            elif argname == '--common-words':
-                self._parse_common_words(argvalue)
+                self.auth_tuple = get_auth_info(argvalue)
 
     #Executes the fuzzing algorithm
     def execute(self):
@@ -125,14 +123,6 @@ class DiscoverStrategy(FuzzerStrategy):
     #Still needs implementation
     def _parse_common_words(self, word_file):
         print("Common words parsed")
-    
-    #Uses authentication config to get the appropriate information based on
-    #the command line argument
-    def _parse_custom_auth(self, auth_string):
-        if auth_string in customauth.authconfig:
-            self.auth_tuple = customauth.authconfig[auth_string]
-        else:
-            self.auth_tuple = ()
 
     #Conducts the requests necessary to 'login'
     def _login(self, session, parsed_body):

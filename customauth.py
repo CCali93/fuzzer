@@ -1,6 +1,12 @@
 #Simple data structure that contains the login informatiom
 
-authconfig = {
+_authconfig = {
     'dvwa': ('admin', 'password'),
-    'dodgeit': ()
+    'bodgeit': ('cac4487@rit.edu', 'password')
 }
+
+def get_auth_info(auth_name):
+	if auth_name in _authconfig:
+		return _authconfig[auth_name]
+	else:
+		return ()
