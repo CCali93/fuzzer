@@ -7,7 +7,8 @@ from urllib.parse import urlparse, urljoin
 
 import customauth
 from fuzzerstrategy import FuzzerStrategy
-from helpers import get_url_domain, is_absolute_url, get_url_params
+from helpers import get_url_domain, is_absolute_url, get_url_params,\
+    trim_url_params
 
 class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
@@ -23,7 +24,7 @@ class DiscoverStrategy(FuzzerStrategy):
 
         self.discovered_urls = {self.source_url}
 
-        self.system_inputs = {}
+        self.url_data = dict()
 
         for arg in args[1:]:
             arg_value_pair = arg.split('=')
@@ -47,24 +48,19 @@ class DiscoverStrategy(FuzzerStrategy):
         
         response = session.get(self.source_url)
         parsed_body = html.fromstring(response.content)
-        print(parsed_body.xpath("//title/text()")[0])
+        self.url_data[self.source_url] = dict()
+        self.url_data[self.source_url]['title'] =\
+            parsed_body.xpath("//title/text()")[0]
 
         response = session.get(self.source_url)
+      
+        self.url_data[self.source_url]['forminput'] =\
+            parsed_body.xpath("//input")
 
-        print("\tForm Inputs:")
-        self.system_inputs[self.source_url] = {
-            'forminput': parsed_body.xpath("//input")
-        }
-        for input_elem in self.system_inputs[self.source_url]['forminput']:
-            print("\t\t" + (str(input_elem)))
+        self.url_data[self.source_url]['cookies'] = response.cookies
 
-        print("\tCookies:")
-        cookie_list = response.cookies
-        for (key, value) in cookie_list:
-            print("\t\t%s: %s" % (key, value))
-
-        print("\tLinks:")
-        self.system_inputs[self.source_url]['urlparams'] = []
+        self.url_data[self.source_url]['urlparams'] = []
+        self.url_data[self.source_url]['accessible_links'] = []
         all_links = set(
             filter(
                 lambda url: self._is_valid_page_link(url),
@@ -77,12 +73,34 @@ class DiscoverStrategy(FuzzerStrategy):
                 absolute_link = urljoin(self.source_url, link)
             else:
                absolute_link = urljoin(self.source_url + '/', link)
-            self.system_inputs[self.source_url]['urlparams'].extend(
-                get_url_params(
-                    absolute_link
-                )
+
+            self.url_data[self.source_url]['accessible_links'].append(
+                trim_url_params(absolute_link)
             )
-            print("\t\t%s" % (absolute_link))
+            urlparams = get_url_params(absolute_link)
+            self.url_data[self.source_url]['urlparams'].extend(
+                urlparams
+            )
+        
+    def output_discovered_data(self):
+        for (url) in self.url_data:
+            print(self.url_data[url]['title'])
+
+            print("\tForm Inputs:")
+            for input_elem in self.url_data[url]['forminput']:
+                print("\t\t" + (str(input_elem)))
+
+            print("\tURL Parameters:")
+            for urlparam in self.url_data[url]['urlparams']:
+                print("\t\t%s" % (urlparam))
+
+            print("\tCookies:")
+            for (key, value) in self.url_data[url]['cookies']:
+                print("\t\t%s: %s" % (key, value))
+
+            print("\tLinks:")
+            for link in self.url_data[url]['accessible_links']:
+                print("\t\t%s" % (link))
 
 
     def _parse_common_words(self, word_file):

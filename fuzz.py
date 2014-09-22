@@ -18,6 +18,9 @@ def main(args):
     if strategy is not None:
         strategy.execute()
 
+        if command == 'discover':
+            strategy.output_discovered_data()
+
 if __name__ == '__main__':
     if len(sys.argv) >= 2:
         main(sys.argv[1:])
