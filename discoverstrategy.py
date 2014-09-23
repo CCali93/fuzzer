@@ -51,24 +51,31 @@ class DiscoverStrategy(FuzzerStrategy):
         else:
             self.is_logged_in = True
         
-        #We've logged in, so lets do another request and get actual page data
-        response = session.get(self.source_url)
-        parsed_body = html.fromstring(response.content)
+        #Add the first url to the queue
+        self.urlqueue.append(self.source_url)
+        #We can start web crawling
+        while (len(self.urlqueue)):
+            curr = self.urlqueue.popleft()
+            self.discovered_urls.append(curr)
+            #Lets do another request and get actual page data
+            response = session.get(curr)
+            parsed_body = html.fromstring(response.content)
 
-        #get the title for the requested page and store it
-        self.url_data[self.source_url] = dict()
-        self.url_data[self.source_url]['title'] =\
-            parsed_body.xpath("//title/text()")[0]
-      
-        #Get all form inputs on the page and store them
-        self.url_data[self.source_url]['forminput'] =\
-            parsed_body.xpath("//input")
+            #get the title for the requested page and store it
+            self.url_data[self.source_url] = dict()
+            self.url_data[self.source_url]['title'] =\
+                parsed_body.xpath("//title/text()")[0]
+          
+            #Get all form inputs on the page and store them
+            self.url_data[self.source_url]['forminput'] =\
+                parsed_body.xpath("//input")
 
-        #store any cookies this page might have
-        self.url_data[self.source_url]['cookies'] = response.cookies
+            #store any cookies this page might have
+            self.url_data[self.source_url]['cookies'] = response.cookies
 
-        self._discover_page_link_data(self.source_url, parsed_body)
-    
+            self._discover_page_link_data(self.source_url, parsed_body)
+
+
     #simply outputs the contents of the data structure
     def output_discovered_data(self):
         for (url) in self.url_data:
@@ -103,6 +110,7 @@ class DiscoverStrategy(FuzzerStrategy):
                 html_body.xpath("//a/@href")
             )
         )
+
         for link in all_links:
             #We want to create a link as an absolute url so we don't get
             #errors with our requests
@@ -123,6 +131,11 @@ class DiscoverStrategy(FuzzerStrategy):
             self.url_data[url]['urlparams'].update(
                 urlparams
             )
+
+            #if the link haven't already been discovered, add it to the queue
+            if link not in self.discovered_urls:
+                self.urlqueue.apppend(link)
+
 
     #Parses the text file given for common words
     #Still needs implementation
@@ -175,8 +188,3 @@ class DiscoverStrategy(FuzzerStrategy):
             self.source_url.endswith('/') else self.source_url + '/'
 
         return (not is_absolute_url(url)) or get_url_domain(url) == self_domain
-
-    #Finds all links on the current page
-    def _find_links(self,url):
-        links = []
-        return links
