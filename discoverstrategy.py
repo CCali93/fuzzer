@@ -134,7 +134,7 @@ class DiscoverStrategy(FuzzerStrategy):
 
             #if the link haven't already been discovered, add it to the queue
             if link not in self.discovered_urls:
-                self.urlqueue.apppend(link)
+                self.urlqueue.append(absolute_link)
 
 
     #Parses the text file given for common words
