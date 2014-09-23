@@ -94,9 +94,9 @@ class DiscoverStrategy(FuzzerStrategy):
     #Discovers the links infomration on a page
     def _discover_page_link_data(self, url, html_body):
         #Prepare to store any url parameters present in links on the page
-        self.url_data[url]['urlparams'] = []
+        self.url_data[url]['urlparams'] = set()
         #We're also storing unique links acessible from the given page
-        self.url_data[url]['accessible_links'] = []
+        self.url_data[url]['accessible_links'] = set()
         all_links = set(
             filter(
                 lambda url: self._is_valid_page_link(url),
@@ -113,14 +113,14 @@ class DiscoverStrategy(FuzzerStrategy):
                absolute_link = urljoin(url + '/', link)
 
             #we want our accessible links to be links without url parameters=
-            self.url_data[url]['accessible_links'].append(
+            self.url_data[url]['accessible_links'].add(
                 trim_url_params(absolute_link)
             )
 
             #get the url parameters from the url and store them in the data
             #structure
             urlparams = get_url_params(absolute_link)
-            self.url_data[url]['urlparams'].extend(
+            self.url_data[url]['urlparams'].update(
                 urlparams
             )
 
