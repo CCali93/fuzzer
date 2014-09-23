@@ -67,36 +67,7 @@ class DiscoverStrategy(FuzzerStrategy):
         #store any cookies this page might have
         self.url_data[self.source_url]['cookies'] = response.cookies
 
-        #Prepare to store any url parameters present in links on the page
-        self.url_data[self.source_url]['urlparams'] = []
-        #We're also storing unique links acessible from the given page
-        self.url_data[self.source_url]['accessible_links'] = []
-        all_links = set(
-            filter(
-                lambda url: self._is_valid_page_link(url),
-                parsed_body.xpath("//a/@href")
-            )
-        )
-        for link in all_links:
-            #We want to create a link as an absolute url so we don't get
-            #errors with our requests
-            absolute_link = ''
-            if self.source_url.endswith('/'):
-                absolute_link = urljoin(self.source_url, link)
-            else:
-               absolute_link = urljoin(self.source_url + '/', link)
-
-            #we want our accessible links to be links without url parameters=
-            self.url_data[self.source_url]['accessible_links'].append(
-                trim_url_params(absolute_link)
-            )
-
-            #get the url parameters from the url and store them in the data
-            #structure
-            urlparams = get_url_params(absolute_link)
-            self.url_data[self.source_url]['urlparams'].extend(
-                urlparams
-            )
+        self._discover_page_link_data(self.source_url, parsed_body)
     
     #simply outputs the contents of the data structure
     def output_discovered_data(self):
@@ -118,6 +89,40 @@ class DiscoverStrategy(FuzzerStrategy):
             print("\tLinks:")
             for link in self.url_data[url]['accessible_links']:
                 print("\t\t%s" % (link))
+
+
+    #Discovers the links infomration on a page
+    def _discover_page_link_data(self, url, html_body):
+        #Prepare to store any url parameters present in links on the page
+        self.url_data[url]['urlparams'] = []
+        #We're also storing unique links acessible from the given page
+        self.url_data[url]['accessible_links'] = []
+        all_links = set(
+            filter(
+                lambda url: self._is_valid_page_link(url),
+                html_body.xpath("//a/@href")
+            )
+        )
+        for link in all_links:
+            #We want to create a link as an absolute url so we don't get
+            #errors with our requests
+            absolute_link = ''
+            if url.endswith('/'):
+                absolute_link = urljoin(url, link)
+            else:
+               absolute_link = urljoin(url + '/', link)
+
+            #we want our accessible links to be links without url parameters=
+            self.url_data[url]['accessible_links'].append(
+                trim_url_params(absolute_link)
+            )
+
+            #get the url parameters from the url and store them in the data
+            #structure
+            urlparams = get_url_params(absolute_link)
+            self.url_data[url]['urlparams'].extend(
+                urlparams
+            )
 
     #Parses the text file given for common words
     #Still needs implementation
