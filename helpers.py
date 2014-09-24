@@ -28,15 +28,15 @@ def validate_url(url, source_url):
     not_equal_to_source = not _urls_equal(url, source_url)
     not_absolute = not _is_absolute_url(url)
     no_mailto_links = 'mailto' not in url
-    no_dots = '.' not in url
+    no_dots = '..' not in url
     no_cross_domain = _get_url_domain(url) != _get_url_domain(source_url)
     no_domain = url != _get_url_domain(source_url)
 
     return (
-        not_equal_to_source and no_mailto_links and no_dots and no_cross_domain\
+        not_equal_to_source and no_mailto_links and no_cross_domain\
         and no_domain
     ) or (
-        not_absolute and no_mailto_links
+        not_absolute and no_mailto_links and no_dots
     )
 
 """
