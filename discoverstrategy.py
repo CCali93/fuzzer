@@ -15,8 +15,8 @@ class DiscoverStrategy(FuzzerStrategy):
         super(DiscoverStrategy, self).__init__()
 
         self.login_action = ''
+        self.login_discovered = False
 
-        self.is_logged_in = False
         self.auth_tuple = ()
 
         self.source_url = args[0] #The first url to be requested
@@ -47,21 +47,32 @@ class DiscoverStrategy(FuzzerStrategy):
         response = session.get(self.source_url)
         parsed_body = html.fromstring(response.content)
 
-        if self._contains_login_form(parsed_body) and not self.is_logged_in:
+        if self._contains_login_form(parsed_body):
             self.login_action = self._get_login_forms(parsed_body)[0].action
+            self.login_discovered = True
             self._login(session)
-        else:
-            self.is_logged_in = True
 
         while len(self.urlqueue):
-            self._login(session)
+            if self.login_discovered:
+                self._login(session)
 
             url = self.urlqueue.popleft()
             print("Currently Visiting: %s" % (url))
 
+            just_logged_in = False
+
             response = session.get(url)
-            #if response.status_code == 200:
             parsed_body = html.fromstring(response.content)
+
+            if self._contains_login_form(parsed_body) and not self.login_discovered:
+                self.login_action = self._get_login_forms(parsed_body)[0].action
+                self.login_discovered = True
+                self._login(session)
+                just_logged_in = True
+
+            if just_logged_in:
+                response = session.get(url)
+                parsed_body = html.fromstring(response.content)
 
             #get the title for the requested page and store it
             self.url_data[url] = dict()
@@ -165,12 +176,6 @@ class DiscoverStrategy(FuzzerStrategy):
 
             #Perform the login
             login_response = session.post(login_url, data=login_data)
-
-            #Was the login successful
-            self.is_logged_in = login_response.status_code == 200
-        else:
-            #No login was necessary
-            self.is_logged_in = True
 
     #Gets any login forms present on an html page
     def _get_login_forms(self, html_body):
