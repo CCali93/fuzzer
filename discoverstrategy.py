@@ -14,6 +14,8 @@ class DiscoverStrategy(FuzzerStrategy):
     def __init__(self, args):
         super(DiscoverStrategy, self).__init__()
 
+        self.login_action = ''
+
         self.is_logged_in = False
         self.auth_tuple = ()
 
@@ -45,36 +47,41 @@ class DiscoverStrategy(FuzzerStrategy):
         response = session.get(self.source_url)
         parsed_body = html.fromstring(response.content)
 
-        if self._contains_login_form(parsed_body):
-            self._login(session, parsed_body)
+        if self._contains_login_form(parsed_body) and not self.is_logged_in:
+            self.login_action = self._get_login_forms(parsed_body)[0].action
+            self._login(session)
         else:
             self.is_logged_in = True
 
         while len(self.urlqueue):
+            self._login(session)
+
             url = self.urlqueue.popleft()
             print("Currently Visiting: %s" % (url))
 
             response = session.get(url)
-            if response.status_code == 200:
-                parsed_body = html.fromstring(response.content)
+            #if response.status_code == 200:
+            parsed_body = html.fromstring(response.content)
 
-                #get the title for the requested page and store it
-                self.url_data[url] = dict()
+            #get the title for the requested page and store it
+            self.url_data[url] = dict()
 
-                titles = parsed_body.xpath("//title/text()")
-                self.url_data[url]['title'] = titles[0] if len(titles) else url
-              
-                all_inputs = parsed_body.xpath("//input")
-                self.url_data[url]['forminput'] =\
-                    all_inputs if len(all_inputs) else []
+            titles = parsed_body.xpath("//title/text()")
+            self.url_data[url]['title'] = titles[0] if len(titles) else url
+          
+            all_inputs = parsed_body.xpath("//input")
+            self.url_data[url]['forminput'] =\
+                all_inputs if len(all_inputs) else []
 
-                #store any cookies this page might have
-                self.url_data[url]['cookies'] = response.cookies
+            #store any cookies this page might have
+            self.url_data[url]['cookies'] = response.cookies
 
-                self._discover_page_link_data(url, parsed_body)
+            self._discover_page_link_data(url, parsed_body)
 
     #simply outputs the contents of the data structure
     def output_discovered_data(self):
+        print("\n\n")
+
         for (url) in self.url_data:
             print(self.url_data[url]['title'])
 
@@ -139,18 +146,15 @@ class DiscoverStrategy(FuzzerStrategy):
         print("Common words parsed")
 
     #Conducts the requests necessary to 'login'
-    def _login(self, session, parsed_body):
+    def _login(self, session):
         #perform authentication here
         if self.auth_tuple != ():
-            #We use the form's action to generate the login url
-            login_form = self._get_login_forms(parsed_body)[0]
-
             #Generate the login url
             login_url = ''
             if self.source_url.endswith('/'):
-                login_url = urljoin(self.source_url, login_form.action)
+                login_url = urljoin(self.source_url, self.login_action)
             else:
-               login_url = urljoin(self.source_url + '/', login_form.action)
+               login_url = urljoin(self.source_url + '/', self.login_action)
 
             #Create the data payload used to log the user in            
             login_data = dict(
