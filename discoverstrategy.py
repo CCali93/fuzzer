@@ -7,8 +7,7 @@ from urllib.parse import urlparse, urljoin
 
 from customauth import get_auth_info
 from fuzzerstrategy import FuzzerStrategy
-from helpers import get_url_domain, is_absolute_url, get_url_params,\
-    trim_url_params
+from helpers import get_url_params, trim_url_params, validate_url
 
 class DiscoverStrategy(FuzzerStrategy):
     #initialize everything necessary here
@@ -46,35 +45,32 @@ class DiscoverStrategy(FuzzerStrategy):
         response = session.get(self.source_url)
         parsed_body = html.fromstring(response.content)
 
-        if self._contains_login_form(parsed_body) and not self.is_logged_in:
+        if self._contains_login_form(parsed_body):
             self._login(session, parsed_body)
         else:
             self.is_logged_in = True
-        
-        #Add the first url to the queue
-        self.urlqueue.append(self.source_url)
-        #We can start web crawling
-        while (len(self.urlqueue)):
-            curr = self.urlqueue.popleft()
-            print("Current URL: %s" % (curr))
-            #Lets do another request and get actual page data
-            response = session.get(curr)
+
+        while len(self.urlqueue):  
+            url = self.urlqueue.popleft()
+            print("Currently Visiting: %s" % (url))
+
+            response = session.get(url)
             parsed_body = html.fromstring(response.content)
 
             #get the title for the requested page and store it
-            self.url_data[self.source_url] = dict()
-            self.url_data[self.source_url]['title'] =\
-                parsed_body.xpath("//title/text()")[0]
+            self.url_data[url] = dict()
+
+            titles = parsed_body.xpath("//title/text()")
+            self.url_data[url]['title'] = titles[0] if len(titles) else url
           
-            #Get all form inputs on the page and store them
-            self.url_data[self.source_url]['forminput'] =\
-                parsed_body.xpath("//input")
+            all_inputs = parsed_body.xpath("//input")
+            self.url_data[url]['forminput'] =\
+                all_inputs if len(all_inputs) else []
 
             #store any cookies this page might have
-            self.url_data[self.source_url]['cookies'] = response.cookies
+            self.url_data[url]['cookies'] = response.cookies
 
-            self._discover_page_link_data(self.source_url, parsed_body)
-
+            self._discover_page_link_data(url, parsed_body)
 
     #simply outputs the contents of the data structure
     def output_discovered_data(self):
@@ -90,8 +86,7 @@ class DiscoverStrategy(FuzzerStrategy):
                 print("\t\t%s" % (urlparam))
 
             print("\tCookies:")
-            for (key, value) in self.url_data[url]['cookies']:
-                print("\t\t%s: %s" % (key, value))
+            print("\t\t%s" % (str(self.url_data[url]['cookies'])))
 
             print("\tLinks:")
             for link in self.url_data[url]['accessible_links']:
@@ -100,51 +95,41 @@ class DiscoverStrategy(FuzzerStrategy):
 
     #Discovers the links infomration on a page
     def _discover_page_link_data(self, url, html_body):
-        abs_src_url = ''
-        if self.source_url.endswith('/'):
-            abs_src_url = self.source_url
-        else:
-            abs_src_url = self.source_url + '/'
-
         #Prepare to store any url parameters present in links on the page
         self.url_data[url]['urlparams'] = set()
         #We're also storing unique links acessible from the given page
         self.url_data[url]['accessible_links'] = set()
         all_links = set(
             filter(
-                lambda url: self._is_valid_page_link(url),
+                lambda url: validate_url(url, self.source_url),
                 html_body.xpath("//a/@href")
             )
         )
 
         for link in all_links:
-            #We want to create a link as an absolute url so we don't get
-            #errors with our requests
-            absolute_link = ''
-            if self.source_url.endswith('/'):
-                absolute_link = urljoin(self.source_url, link)
-            else:
-               absolute_link = urljoin(self.source_url + '/', link)
+            absolute_link = self._generate_absolute_link(link)
 
-            if absolute_link != abs_src_url or\
-                    absolute_link != get_url_domain(self.source_url): 
-                #we want our accessible links to be links without url parameters
-                self.url_data[url]['accessible_links'].add(
-                    trim_url_params(absolute_link)
-                )
+            #we want our accessible links to be links without url parameters
+            self.url_data[url]['accessible_links'].add(
+                trim_url_params(absolute_link)
+            )
 
-                #get the url parameters from the url and store them in the data
-                #structure
-                urlparams = get_url_params(absolute_link)
-                self.url_data[url]['urlparams'].update(
-                    urlparams
-                )
+            #get the url parameters from the url and store them in the data
+            #structure
+            urlparams = get_url_params(absolute_link)
+            self.url_data[url]['urlparams'].update(
+                urlparams
+            )
 
-                #if the link haven't already been discovered, add it to the queue
-                if trim_url_params(absolute_link) not in self.discovered_urls:
-                    self.urlqueue.append(absolute_link)
-                    self.discovered_urls.add(trim_url_params(absolute_link))
-
+        all_links = set(
+            map(
+                lambda url: trim_url_params(self._generate_absolute_link(url)),
+                all_links
+            )
+        )
+        for link in (all_links - self.discovered_urls):
+            self.discovered_urls.add(link)
+            self.urlqueue.append(link)
 
     #Parses the text file given for common words
     #Still needs implementation
@@ -191,8 +176,13 @@ class DiscoverStrategy(FuzzerStrategy):
 
         return len(login_forms) >= 1
 
-    #Validates a url to see if it can be accepted by the fuzzer
-    def _is_valid_page_link(self, url):
-        self_domain = get_url_domain(self.source_url)
+    def _generate_absolute_link(self, url):
+        #We want to create a link as an absolute url so we don't get
+        #errors with our requests
+        absolute_link = ''
+        if self.source_url.endswith('/'):
+            absolute_link = urljoin(self.source_url, url)
+        else:
+           absolute_link = urljoin(self.source_url + '/', url)
 
-        return (not is_absolute_url(url)) or ('.' not in url) or (get_url_domain(url) == self_domain)
+        return absolute_link
