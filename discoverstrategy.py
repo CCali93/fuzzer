@@ -50,27 +50,28 @@ class DiscoverStrategy(FuzzerStrategy):
         else:
             self.is_logged_in = True
 
-        while len(self.urlqueue):  
+        while len(self.urlqueue):
             url = self.urlqueue.popleft()
             print("Currently Visiting: %s" % (url))
 
             response = session.get(url)
-            parsed_body = html.fromstring(response.content)
+            if response.status_code == 200:
+                parsed_body = html.fromstring(response.content)
 
-            #get the title for the requested page and store it
-            self.url_data[url] = dict()
+                #get the title for the requested page and store it
+                self.url_data[url] = dict()
 
-            titles = parsed_body.xpath("//title/text()")
-            self.url_data[url]['title'] = titles[0] if len(titles) else url
-          
-            all_inputs = parsed_body.xpath("//input")
-            self.url_data[url]['forminput'] =\
-                all_inputs if len(all_inputs) else []
+                titles = parsed_body.xpath("//title/text()")
+                self.url_data[url]['title'] = titles[0] if len(titles) else url
+              
+                all_inputs = parsed_body.xpath("//input")
+                self.url_data[url]['forminput'] =\
+                    all_inputs if len(all_inputs) else []
 
-            #store any cookies this page might have
-            self.url_data[url]['cookies'] = response.cookies
+                #store any cookies this page might have
+                self.url_data[url]['cookies'] = response.cookies
 
-            self._discover_page_link_data(url, parsed_body)
+                self._discover_page_link_data(url, parsed_body)
 
     #simply outputs the contents of the data structure
     def output_discovered_data(self):
@@ -111,7 +112,7 @@ class DiscoverStrategy(FuzzerStrategy):
 
             #we want our accessible links to be links without url parameters
             self.url_data[url]['accessible_links'].add(
-                trim_url_params(absolute_link)
+                absolute_link
             )
 
             #get the url parameters from the url and store them in the data
