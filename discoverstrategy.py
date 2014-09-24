@@ -87,7 +87,8 @@ class DiscoverStrategy(FuzzerStrategy):
                 print("\t\t%s" % (urlparam))
 
             print("\tCookies:")
-            print("\t\t%s" % (str(self.url_data[url]['cookies'])))
+            for cookie in self.url_data[url]['cookies']:
+                print("\t\t%s" % (str(cookie)))
 
             print("\tLinks:")
             for link in self.url_data[url]['accessible_links']:
