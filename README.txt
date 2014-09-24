@@ -3,7 +3,8 @@
 ======================================================================================================
 
 1. Install request and lxml libraries for python
-2. Run the program on command line:
+2. On the command line change directories to the home directory of the fuzzer program
+3. Run the program on command line:
     python fuzz.py [discover | test] url OPTIONS
 
 
