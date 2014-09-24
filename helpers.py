@@ -31,7 +31,7 @@ http://www.youtube.com/watch
 """
 def trim_url_params(url):
     parsed_url = urlparse(url)
-    return parsed_url.netloc + parsed_url.path
+    return parsed_url.scheme + '://' + parsed_url.netloc + parsed_url.path
 
 """
 Tests if a URL is an absolute URL:

@@ -56,7 +56,7 @@ class DiscoverStrategy(FuzzerStrategy):
         #We can start web crawling
         while (len(self.urlqueue)):
             curr = self.urlqueue.popleft()
-            self.discovered_urls.append(curr)
+            print("Current URL: %s" % (curr))
             #Lets do another request and get actual page data
             response = session.get(curr)
             parsed_body = html.fromstring(response.content)
@@ -100,6 +100,12 @@ class DiscoverStrategy(FuzzerStrategy):
 
     #Discovers the links infomration on a page
     def _discover_page_link_data(self, url, html_body):
+        abs_src_url = ''
+        if self.source_url.endswith('/'):
+            abs_src_url = self.source_url
+        else:
+            abs_src_url = self.source_url + '/'
+
         #Prepare to store any url parameters present in links on the page
         self.url_data[url]['urlparams'] = set()
         #We're also storing unique links acessible from the given page
@@ -115,26 +121,29 @@ class DiscoverStrategy(FuzzerStrategy):
             #We want to create a link as an absolute url so we don't get
             #errors with our requests
             absolute_link = ''
-            if url.endswith('/'):
-                absolute_link = urljoin(url, link)
+            if self.source_url.endswith('/'):
+                absolute_link = urljoin(self.source_url, link)
             else:
-               absolute_link = urljoin(url + '/', link)
+               absolute_link = urljoin(self.source_url + '/', link)
 
-            #we want our accessible links to be links without url parameters=
-            self.url_data[url]['accessible_links'].add(
-                trim_url_params(absolute_link)
-            )
+            if absolute_link != abs_src_url or\
+                    absolute_link != get_url_domain(self.source_url): 
+                #we want our accessible links to be links without url parameters
+                self.url_data[url]['accessible_links'].add(
+                    trim_url_params(absolute_link)
+                )
 
-            #get the url parameters from the url and store them in the data
-            #structure
-            urlparams = get_url_params(absolute_link)
-            self.url_data[url]['urlparams'].update(
-                urlparams
-            )
+                #get the url parameters from the url and store them in the data
+                #structure
+                urlparams = get_url_params(absolute_link)
+                self.url_data[url]['urlparams'].update(
+                    urlparams
+                )
 
-            #if the link haven't already been discovered, add it to the queue
-            if link not in self.discovered_urls:
-                self.urlqueue.apppend(link)
+                #if the link haven't already been discovered, add it to the queue
+                if trim_url_params(absolute_link) not in self.discovered_urls:
+                    self.urlqueue.append(absolute_link)
+                    self.discovered_urls.add(trim_url_params(absolute_link))
 
 
     #Parses the text file given for common words
@@ -184,7 +193,6 @@ class DiscoverStrategy(FuzzerStrategy):
 
     #Validates a url to see if it can be accepted by the fuzzer
     def _is_valid_page_link(self, url):
-        self_domain = self.source_url if\
-            self.source_url.endswith('/') else self.source_url + '/'
+        self_domain = get_url_domain(self.source_url)
 
-        return (not is_absolute_url(url)) or get_url_domain(url) == self_domain
+        return (not is_absolute_url(url)) or ('.' not in url) or (get_url_domain(url) == self_domain)
