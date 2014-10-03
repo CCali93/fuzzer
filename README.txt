@@ -3,7 +3,9 @@
 ======================================================================================================
 
 1. Extract all files from fuzzer.zip into a directory
-2. Install request and lxml libraries for python
+2. Install request and lxml libraries for python using the following command line inputs:
+	pip install requests
+	pip install lxml
 3. On the command line change directories to the home directory of the fuzzer program
 4. Run the program on command line:
        python fuzz.py [discover | test] url OPTIONS
