@@ -17,6 +17,8 @@ class DiscoverStrategy(FuzzerStrategy):
         self.login_action = ''
         self.login_discovered = False
 
+        self.common_words = []
+
         self.auth_tuple = ()
 
         self.source_url = args[0] #The first url to be requested
@@ -38,6 +40,8 @@ class DiscoverStrategy(FuzzerStrategy):
 
             if argname == '--custom-auth':
                 self.auth_tuple = get_auth_info(argvalue)
+            elif argname == '--common-words':
+                self.common_words = _parse_common_words(argvalue)
 
     #Executes the fuzzing algorithm
     def execute(self):
@@ -113,6 +117,11 @@ class DiscoverStrategy(FuzzerStrategy):
                 print("\t\t%s" % (link))
 
 
+    #Parses the text file given for common words
+    #Still needs implementation
+    def _parse_common_words(self, word_file):
+        print("Common words parsed")
+
     #Discovers the links infomration on a page
     def _discover_page_link_data(self, url, html_body):
         #Prepare to store any url parameters present in links on the page
@@ -150,11 +159,6 @@ class DiscoverStrategy(FuzzerStrategy):
         for link in (all_links - self.discovered_urls):
             self.discovered_urls.add(link)
             self.urlqueue.append(link)
-
-    #Parses the text file given for common words
-    #Still needs implementation
-    def _parse_common_words(self, word_file):
-        print("Common words parsed")
 
     #Conducts the requests necessary to 'login'
     def _login(self, session):

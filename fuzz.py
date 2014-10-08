@@ -3,6 +3,7 @@
 import sys
 
 from discoverstrategy import DiscoverStrategy
+from teststrategy import TestStrategy
 
 _USAGE_MESSAGE = "USAGE fuzz [discover | test] url OPTIONS"
 
@@ -15,6 +16,8 @@ def main(args):
     #work we need
     if command == "discover":
         strategy = DiscoverStrategy(args[1:])
+    elif command == "test":
+        strategy = TestStrategy(args[1:])
     else:
         print(_USAGE_MESSAGE)
 
@@ -28,7 +31,7 @@ def main(args):
 
 if __name__ == '__main__':
     #If the user entered the right amount of command line arguments
-    if len(sys.argv) >= 2:
+    if len(sys.argv) >= 3:
         main(sys.argv[1:])
     else:
         print(_USAGE_MESSAGE)
