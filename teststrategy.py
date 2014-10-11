@@ -1,8 +1,11 @@
 from fuzzerstrategy import FuzzerStrategy
+from discoverstrategy import DiscoverStrategy
 
 class TestStrategy(FuzzerStrategy):
     def __init__(self, args):
         super(TestStrategy, self).__init__()
+
+        self.discovery_strategy = DiscoverStrategy(args)
 
         self.vector_list = []
         self.sensitive_info_list = []
@@ -21,7 +24,8 @@ class TestStrategy(FuzzerStrategy):
                 self.sensitive_info_list = _parse_sensitive_info_file(argvalue)
 
     def execute(self):
-        print("Testing")
+        self.discovery_strategy.execute()
+        self.discovery_strategy.output_discovered_data()
 
     def _parse_vectors_file(self, vector_file):
         print("Vectors parsed")
