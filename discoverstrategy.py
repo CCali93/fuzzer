@@ -1,6 +1,8 @@
 import requests
 from requests.auth import HTTPDigestAuth
 
+import os.path 
+
 from collections import deque
 from lxml import html
 from urllib.parse import urlparse, urljoin
@@ -120,7 +122,11 @@ class DiscoverStrategy(FuzzerStrategy):
     #Parses the text file given for common words
     #Still needs implementation
     def _parse_common_words(self, word_file):
-        print("Common words parsed")
+        if os.path.isfile(word_file):
+            for line in open(word_file):
+                self.common_words.append(line)
+        else:
+            raise Exception("%s: file not found" % (word_file))
 
     #Discovers the links infomration on a page
     def _discover_page_link_data(self, url, html_body):
