@@ -50,6 +50,7 @@ class DiscoverStrategy(FuzzerStrategy):
         #Begin code for any necessary logging in.
         #This only needs to be executed once.
         session = requests.session()
+
         response = session.get(self.source_url)
         parsed_body = html.fromstring(response.content)
 
@@ -84,7 +85,7 @@ class DiscoverStrategy(FuzzerStrategy):
             self.url_data[url] = dict()
 
             #response time in milliseconds
-            self.url_data[url]['responsetime'] =
+            self.url_data[url]['responsetime'] =\
                 response.elapsed.total_seconds() * 1000
             #status of the response
             self.url_data[url]['status_code'] = response.status_code
@@ -108,21 +109,21 @@ class DiscoverStrategy(FuzzerStrategy):
         for (url) in self.url_data:
             print(self.url_data[url]['title'])
 
-            print("\tForm Inputs:")
+            print((" " * 4) + "Form Inputs:")
             for input_elem in self.url_data[url]['forminput']:
-                print("\t\t" + (str(input_elem)))
+                print((" " * 8) + str(input_elem))
 
-            print("\tURL Parameters:")
+            print((" " * 4) + "URL Parameters:")
             for urlparam in self.url_data[url]['urlparams']:
-                print("\t\t%s" % (urlparam))
+                print((" " * 8) + urlparam)
 
-            print("\tCookies:")
+            print((" " * 4) + "Cookies:")
             for cookie in self.url_data[url]['cookies']:
-                print("\t\t%s" % (str(cookie)))
+                print((" " * 8) + str(cookie))
 
-            print("\tLinks:")
+            print((" " * 4) + "Links:")
             for link in self.url_data[url]['accessible_links']:
-                print("\t\t%s" % (link))
+                print((" " * 8) + link)
 
 
     #Parses the text file given for common words

@@ -34,9 +34,15 @@ class TestStrategy(FuzzerStrategy):
 
         #print any urls with response times longer than the specified limit
 
-        #test forms for information disclosure
+        """
+        test forms for information disclosure
+        submit forms and scan response for any information in the provided file
+        """
 
-        #test for data sanitization
+        """
+        Using given inputs, somehow check for properly escaped values upon
+        submission
+        """
 
     def _parse_vectors_file(self, vector_file):
         if os.path.isfile(vector_file):
@@ -46,8 +52,8 @@ class TestStrategy(FuzzerStrategy):
             raise Exception("%s: file not found" % (vector_file))
 
     def _parse_sensitive_info_file(self, sensitive_info_file):
-        if os.path.isfilesensitive_info_file):
-            for line in opensensitive_info_file):
+        if os.path.isfile(sensitive_info_file):
+            for line in open(sensitive_info_file):
                 self.sensitive_info_list.append(line.strip())
         else:
-            raise Exception("%s: file not found" % sensitive_info_file))
+            raise Exception("%s: file not found" % sensitive_info_file)
