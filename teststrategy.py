@@ -30,9 +30,23 @@ class TestStrategy(FuzzerStrategy):
     def execute(self):
         self.discovery_strategy.execute()
 
+        print("\n\n\nTest Results:")
+
         #print all urls with non 200 status codes
+        print((" " * 4) + "Requests with invalid status codes:")
+        for url in self.discovery_strategy.url_data:
+            urldata = self.discovery_strategy.url_data[url]
+
+            if urldata['status_code'] != 200:
+                print((" " * 8) + url)
 
         #print any urls with response times longer than the specified limit
+        print((" " * 4) + "Potentially DOS Vulnerable URLs:")
+        for url in self.discovery_strategy.url_data:
+            urldata = self.discovery_strategy.url_data[url]
+
+            if urldata['response_time'] >= self.max_response_length:
+                print((" " * 8) + url)
 
         """
         test forms for information disclosure

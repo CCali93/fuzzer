@@ -85,7 +85,7 @@ class DiscoverStrategy(FuzzerStrategy):
             self.url_data[url] = dict()
 
             #response time in milliseconds
-            self.url_data[url]['responsetime'] =\
+            self.url_data[url]['response_time'] =\
                 response.elapsed.total_seconds() * 1000
             #status of the response
             self.url_data[url]['status_code'] = response.status_code
