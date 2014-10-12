@@ -43,7 +43,7 @@ class DiscoverStrategy(FuzzerStrategy):
             if argname == '--custom-auth':
                 self.auth_tuple = get_auth_info(argvalue)
             elif argname == '--common-words':
-                self.common_words_urls = _parse_common_words(argvalue)
+                self._parse_common_words(argvalue)
 
     #Executes the fuzzing algorithm
     def execute(self):
@@ -126,9 +126,15 @@ class DiscoverStrategy(FuzzerStrategy):
             abs_url = self._generate_absolute_link(self.source_url)
 
             for line in open(word_file):
-                self.common_words_urls.append(urljoin(abs_url, line))
-                self.common_words_urls.append(urljoin(abs_url, line + '.jsp'))
-                self.common_words_urls.append(urljoin(abs_url, line + '.php'))
+                stripped_line = line.strip()
+
+                self.common_words_urls.append(urljoin(abs_url, stripped_line))
+                self.common_words_urls.append(
+                    urljoin(abs_url, stripped_line + '.jsp')
+                )
+                self.common_words_urls.append(
+                    urljoin(abs_url, stripped_line + '.php')
+                )
         else:
             raise Exception("%s: file not found" % (word_file))
 
