@@ -30,6 +30,14 @@ class TestStrategy(FuzzerStrategy):
     def execute(self):
         self.discovery_strategy.execute()
 
+        #print all urls with non 200 status codes
+
+        #print any urls with response times longer than the specified limit
+
+        #test forms for information disclosure
+
+        #test for data sanitization
+
     def _parse_vectors_file(self, vector_file):
         if os.path.isfile(vector_file):
             for line in open(vector_file):

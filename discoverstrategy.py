@@ -83,6 +83,12 @@ class DiscoverStrategy(FuzzerStrategy):
             #get the title for the requested page and store it
             self.url_data[url] = dict()
 
+            #response time in milliseconds
+            self.url_data[url]['responsetime'] =
+                response.elapsed.total_seconds() * 1000
+            #status of the response
+            self.url_data[url]['status_code'] = response.status_code
+
             titles = parsed_body.xpath("//title/text()")
             self.url_data[url]['title'] = titles[0] if len(titles) else url
           
