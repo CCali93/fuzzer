@@ -30,7 +30,7 @@ class TestStrategy(FuzzerStrategy):
     def execute(self):
         self.discovery_strategy.execute()
 
-        print("\n\n\nTest Results:")
+        print("\n\nTest Results:")
 
         #print all urls with non 200 status codes
         print((" " * 4) + "Requests with invalid status codes:")
