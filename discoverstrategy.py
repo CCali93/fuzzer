@@ -130,19 +130,19 @@ class DiscoverStrategy(FuzzerStrategy):
     #Still needs implementation
     def _parse_common_words(self, word_file):
         if os.path.isfile(word_file):
-            abs_url = self._generate_absolute_link(self.source_url)
-
             print("Parsing common words file: %s" % (word_file))
 
             for line in open(word_file):
                 stripped_line = line.strip()
 
-                self.common_words_urls.append(urljoin(abs_url, stripped_line))
                 self.common_words_urls.append(
-                    urljoin(abs_url, stripped_line + '.jsp')
+                    self._generate_absolute_link(stripped_line)
                 )
                 self.common_words_urls.append(
-                    urljoin(abs_url, stripped_line + '.php')
+                    self._generate_absolute_link(stripped_line + '.jsp')
+                )
+                self.common_words_urls.append(
+                    self._generate_absolute_link(stripped_line + '.php')
                 )
         else:
             raise Exception("%s: file not found" % (word_file))
