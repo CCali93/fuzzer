@@ -75,9 +75,20 @@ class TestStrategy(FuzzerStrategy):
             if urldata['response_time'] >= self.max_response_length:
                 print((" " * 8) + url)
 
+        print((" " * 4) + "Lack of sanitization present for:")
+        for url in self.discovery_strategy.url_data:
+            for vector in self.vector_list:
+                self._login(session)
+
+                test_response = session.get(urljoin(url, vector))
+
+                if response.status_code == 200:
+                    print((" " * 8) + url)
+                    break
+        """
         for url in self.discovery_strategy.url_data:
             urldata = self.discovery_strategy.url_data[url]
-            """
+
             test forms for information disclosure
             submit forms and scan response for any information in the provided
             file
@@ -87,6 +98,8 @@ class TestStrategy(FuzzerStrategy):
             Using given inputs, somehow check for properly escaped values upon
             submission
             """
+        """ """
+
 
 
     def _generate_absolute_link(self, url):
