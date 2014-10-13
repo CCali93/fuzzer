@@ -9,7 +9,7 @@ from urllib.parse import urlparse, urljoin
 
 from customauth import get_auth_info
 from fuzzerstrategy import FuzzerStrategy
-from helpers import get_url_params, login, trim_url_params, validate_url
+from helpers import get_url_params, trim_url_params, validate_url
 
 class DiscoverStrategy(FuzzerStrategy):
     #initialize everything necessary here

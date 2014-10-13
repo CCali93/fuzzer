@@ -1,9 +1,11 @@
+import requests
 import os.path
+
+from urllib.parse import urlparse, urljoin
 
 from customauth import get_auth_info
 from fuzzerstrategy import FuzzerStrategy
 from discoverstrategy import DiscoverStrategy
-from helpers import login
 
 class TestStrategy(FuzzerStrategy):
     def __init__(self, args):
@@ -41,21 +43,9 @@ class TestStrategy(FuzzerStrategy):
     def execute(self):
         self.discovery_strategy.execute()
 
-        login_url = ''
-        if self.source_url.endswith('/'):
-            login_url = urljoin(
-                self.source_url,
-                self.discovery_strategy.login_action
-            )
-        else:
-            login_url = urljoin(
-                self.source_url + '/',
-                self.discovery_strategy.login_action
-            )
-
         session = requests.session()
 
-        login(login_url, session, get_auth_info(self.custom_auth))
+        self._login(session)
 
         print("\n\nTest Results:")
 
@@ -97,6 +87,39 @@ class TestStrategy(FuzzerStrategy):
             Using given inputs, somehow check for properly escaped values upon
             submission
             """
+
+
+    def _generate_absolute_link(self, url):
+        #We want to create a link as an absolute url so we don't get
+        #errors with our requests
+        absolute_link = ''
+        if self.source_url.endswith('/'):
+            absolute_link = urljoin(self.source_url, url)
+        else:
+           absolute_link = urljoin(self.source_url + '/', url)
+
+        return absolute_link
+
+    #Conducts the requests necessary to 'login'
+    def _login(self, session):
+        #perform authentication here
+        auth_tuple = get_auth_info(self.custom_auth)
+
+        if auth_tuple != ():
+            #Generate the login url
+            login_url = self._generate_absolute_link(
+                self.discovery_strategy.login_action
+            )
+
+            #Create the data payload used to log the user in            
+            login_data = dict(
+                username=auth_tuple[0],
+                password=auth_tuple[1],
+                Login='Login'
+            )
+
+            #Perform the login
+            login_response = session.post(login_url, data=login_data)
 
     def _parse_vectors_file(self, vector_file):
         if os.path.isfile(vector_file):
