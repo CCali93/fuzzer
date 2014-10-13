@@ -1,13 +1,17 @@
 import os.path
 
+from customauth import get_auth_info
 from fuzzerstrategy import FuzzerStrategy
 from discoverstrategy import DiscoverStrategy
+from helpers import login
 
 class TestStrategy(FuzzerStrategy):
     def __init__(self, args):
         super(TestStrategy, self).__init__()
 
-        self.discovery_strategy = DiscoverStrategy(args)
+        self.source_url = args[0]
+
+        self.custom_auth = ''
 
         self.vector_list = []
         self.sensitive_info_list = []
@@ -22,15 +26,48 @@ class TestStrategy(FuzzerStrategy):
 
             if argname == '--vectors':
                 self._parse_vectors_file(argvalue)
+            elif argname == '--custom-auth':
+                self.custom_auth = argvalue
             elif argname == '--sensitive':
                 self._parse_sensitive_info_file(argvalue)
             elif argname == '--slow':
-                self.max_response_length = int(argvalue)
+                try:
+                    self.max_response_length = int(argvalue)
+                except ValueError:
+                    raise Exception("--slow flag must be an integer")
+
+        self.discovery_strategy = DiscoverStrategy(args)
 
     def execute(self):
         self.discovery_strategy.execute()
 
+        login_url = ''
+        if self.source_url.endswith('/'):
+            login_url = urljoin(
+                self.source_url,
+                self.discovery_strategy.login_action
+            )
+        else:
+            login_url = urljoin(
+                self.source_url + '/',
+                self.discovery_strategy.login_action
+            )
+
+        session = requests.session()
+
+        login(login_url, session, get_auth_info(self.custom_auth))
+
         print("\n\nTest Results:")
+
+        print((" " * 4) + "Potentially unlinked pages:")
+        for url in self.discovery_strategy.common_words_urls:
+            response = session.get(url)
+            print((" " * 8) + url + ": ", end='')
+
+            if response.status_code == 200:
+                print("Exists")
+            elif response.status_code == 404:
+                print("Does not exist")
 
         #print all urls with non 200 status codes
         print((" " * 4) + "Requests with invalid status codes:")
@@ -48,15 +85,18 @@ class TestStrategy(FuzzerStrategy):
             if urldata['response_time'] >= self.max_response_length:
                 print((" " * 8) + url)
 
-        """
-        test forms for information disclosure
-        submit forms and scan response for any information in the provided file
-        """
+        for url in self.discovery_strategy.url_data:
+            urldata = self.discovery_strategy.url_data[url]
+            """
+            test forms for information disclosure
+            submit forms and scan response for any information in the provided
+            file
+            """
 
-        """
-        Using given inputs, somehow check for properly escaped values upon
-        submission
-        """
+            """
+            Using given inputs, somehow check for properly escaped values upon
+            submission
+            """
 
     def _parse_vectors_file(self, vector_file):
         if os.path.isfile(vector_file):

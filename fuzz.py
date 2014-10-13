@@ -14,12 +14,15 @@ def main(args):
 
     #based on the command entered we create the appropriate strategy to do the
     #work we need
-    if command == "discover":
-        strategy = DiscoverStrategy(args[1:])
-    elif command == "test":
-        strategy = TestStrategy(args[1:])
-    else:
-        print(_USAGE_MESSAGE)
+    try:
+        if command == "discover":
+            strategy = DiscoverStrategy(args[1:])
+        elif command == "test":
+            strategy = TestStrategy(args[1:])
+        else:
+            print(_USAGE_MESSAGE)
+    except Exception as e:
+        print(str(e))
 
     #Basically if the user entered a valid command
     if strategy is not None:

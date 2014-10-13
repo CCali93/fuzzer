@@ -9,7 +9,7 @@ from urllib.parse import urlparse, urljoin
 
 from customauth import get_auth_info
 from fuzzerstrategy import FuzzerStrategy
-from helpers import get_url_params, trim_url_params, validate_url
+from helpers import get_url_params, login, trim_url_params, validate_url
 
 class DiscoverStrategy(FuzzerStrategy):
     #initialize everything necessary here
@@ -194,15 +194,7 @@ class DiscoverStrategy(FuzzerStrategy):
             else:
                login_url = urljoin(self.source_url + '/', self.login_action)
 
-            #Create the data payload used to log the user in            
-            login_data = dict(
-                username=self.auth_tuple[0],
-                password=self.auth_tuple[1],
-                Login='Login'
-            )
-
-            #Perform the login
-            login_response = session.post(login_url, data=login_data)
+            login(login_url, session, self.auth_tuple)
 
     #Gets any login forms present on an html page
     def _get_login_forms(self, html_body):
