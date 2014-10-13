@@ -85,21 +85,19 @@ class TestStrategy(FuzzerStrategy):
                 if response.status_code == 200:
                     print((" " * 8) + url)
                     break
-        """
+
+        print((" " * 4) + "Undesired Information Disclosure in:")
+        #For each URL:
+        #check response text for any element of the sensitive list
         for url in self.discovery_strategy.url_data:
-            urldata = self.discovery_strategy.url_data[url]
+            for info in sensitive_info_list:
+                self._login(session)
 
-            test forms for information disclosure
-            submit forms and scan response for any information in the provided
-            file
-            """
-
-            """
-            Using given inputs, somehow check for properly escaped values upon
-            submission
-            """
-        """ """
-
+                info_check_response = session.get(url)                
+                
+                if info_check_response.text.contains(info):
+                    print((" " * 8) + url)
+                    break
 
 
     def _generate_absolute_link(self, url):
