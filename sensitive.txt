@@ -2,3 +2,4 @@ MySQL
 query
 script
 SELECT
+DELETE
