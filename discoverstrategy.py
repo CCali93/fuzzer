@@ -132,6 +132,8 @@ class DiscoverStrategy(FuzzerStrategy):
         if os.path.isfile(word_file):
             abs_url = self._generate_absolute_link(self.source_url)
 
+            print("Parsing common words file: %s" % (word_file))
+
             for line in open(word_file):
                 stripped_line = line.strip()
 

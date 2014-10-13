@@ -82,7 +82,7 @@ class TestStrategy(FuzzerStrategy):
 
                 test_response = session.get(urljoin(url, vector))
 
-                if response.status_code == 200:
+                if test_response.status_code == 200:
                     print((" " * 8) + url)
                     break
 
@@ -90,12 +90,12 @@ class TestStrategy(FuzzerStrategy):
         #For each URL:
         #check response text for any element of the sensitive list
         for url in self.discovery_strategy.url_data:
-            for info in sensitive_info_list:
+            for info in self.sensitive_info_list:
                 self._login(session)
 
                 info_check_response = session.get(url)                
                 
-                if info_check_response.text.contains(info):
+                if info in info_check_response.text:
                     print((" " * 8) + url)
                     break
 
@@ -134,6 +134,7 @@ class TestStrategy(FuzzerStrategy):
 
     def _parse_vectors_file(self, vector_file):
         if os.path.isfile(vector_file):
+            print("Parsing vector file: %s" % (vector_file))
             for line in open(vector_file):
                 self.vector_list.append(line.strip())
         else:
@@ -141,6 +142,9 @@ class TestStrategy(FuzzerStrategy):
 
     def _parse_sensitive_info_file(self, sensitive_info_file):
         if os.path.isfile(sensitive_info_file):
+            print(
+                "Parsing sensitive information file: %s" % (sensitive_info_file)
+            )
             for line in open(sensitive_info_file):
                 self.sensitive_info_list.append(line.strip())
         else:
