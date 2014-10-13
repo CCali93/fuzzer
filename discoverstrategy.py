@@ -188,11 +188,7 @@ class DiscoverStrategy(FuzzerStrategy):
         #perform authentication here
         if self.auth_tuple != ():
             #Generate the login url
-            login_url = ''
-            if self.source_url.endswith('/'):
-                login_url = urljoin(self.source_url, self.login_action)
-            else:
-               login_url = urljoin(self.source_url + '/', self.login_action)
+            login_url = self._generate_absolute_link(self.login_action)
 
             #Create the data payload used to log the user in            
             login_data = dict(

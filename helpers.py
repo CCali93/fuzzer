@@ -15,18 +15,6 @@ def get_url_params(url):
         params.append(key)
     return params
 
-def login(login_url, session, auth_tuple):
-    if auth_tuple != ():
-        #Create the data payload used to log the user in            
-        login_data = dict(
-            username=auth_tuple[0],
-            password=auth_tuple[1],
-            Login='Login'
-        )
-
-        #Perform the login
-        session.post(login_url, data=login_data)
-
 """
 Returns the URL without url parameters on it.
 Ex: http://www.youtube.com/watch?abc=xyz would return
@@ -52,7 +40,7 @@ def validate_url(url, source_url):
     )
 
 """
-Gets the doman of a url
+Gets the domain of a url
 Ex: http://www.youtube.com/watch would return http://www.youtube.com/
 """
 def _get_url_domain(url):
