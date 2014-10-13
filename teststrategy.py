@@ -59,6 +59,7 @@ class TestStrategy(FuzzerStrategy):
             elif response.status_code == 404:
                 print("Does not exist")
 
+        count = 0
         #print all urls with non 200 status codes
         print((" " * 4) + "Requests with invalid status codes:")
         for url in self.discovery_strategy.url_data:
@@ -66,7 +67,12 @@ class TestStrategy(FuzzerStrategy):
 
             if urldata['status_code'] != 200:
                 print((" " * 8) + url)
+                count += 1
 
+        if count == 0:
+            print((" " * 8) + "None")
+
+        count = 0
         #print any urls with response times longer than the specified limit
         print((" " * 4) + "Potentially DOS Vulnerable URLs:")
         for url in self.discovery_strategy.url_data:
@@ -74,7 +80,12 @@ class TestStrategy(FuzzerStrategy):
 
             if urldata['response_time'] >= self.max_response_length:
                 print((" " * 8) + url)
+                count += 1
 
+        if count == 0:
+            print((" " * 8) + "None")
+
+        count = 0
         print((" " * 4) + "Lack of sanitization present for:")
         for url in self.discovery_strategy.url_data:
             for vector in self.vector_list:
@@ -84,11 +95,14 @@ class TestStrategy(FuzzerStrategy):
 
                 if test_response.status_code == 200:
                     print((" " * 8) + url)
+                    count += 1
                     break
 
+        if count == 0:
+            print((" " * 8) + "None")
+
+        count = 0
         print((" " * 4) + "Undesired Information Disclosure in:")
-        #For each URL:
-        #check response text for any element of the sensitive list
         for url in self.discovery_strategy.url_data:
             for info in self.sensitive_info_list:
                 self._login(session)
@@ -97,7 +111,11 @@ class TestStrategy(FuzzerStrategy):
                 
                 if info in info_check_response.text:
                     print((" " * 8) + url)
+                    count += 1
                     break
+
+        if count == 0:
+            print((" " * 8) + "None")
 
 
     def _generate_absolute_link(self, url):

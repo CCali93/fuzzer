@@ -110,20 +110,32 @@ class DiscoverStrategy(FuzzerStrategy):
             print(self.url_data[url]['title'])
 
             print((" " * 4) + "Form Inputs:")
-            for input_elem in self.url_data[url]['forminput']:
-                print((" " * 8) + str(input_elem))
+            if len(self.url_data[url]['forminput']) > 0:
+                for input_elem in self.url_data[url]['forminput']:
+                    print((" " * 8) + str(input_elem))
+            else:
+                print((" " * 8) + "None")
 
             print((" " * 4) + "URL Parameters:")
-            for urlparam in self.url_data[url]['urlparams']:
-                print((" " * 8) + urlparam)
+            if len(self.url_data[url]['urlparams']) > 0:
+                for urlparam in self.url_data[url]['urlparams']:
+                    print((" " * 8) + urlparam)
+            else:
+                print((" " * 8) + "None")
 
             print((" " * 4) + "Cookies:")
-            for cookie in self.url_data[url]['cookies']:
-                print((" " * 8) + str(cookie))
+            if len(self.url_data[url]['cookies']) > 0:
+                for cookie in self.url_data[url]['cookies']:
+                    print((" " * 8) + str(cookie))
+            else:
+                print((" " * 8) + "None")
 
             print((" " * 4) + "Links:")
-            for link in self.url_data[url]['accessible_links']:
-                print((" " * 8) + link)
+            if len(self.url_data[url]['accessible_links']) > 0:
+                for link in self.url_data[url]['accessible_links']:
+                    print((" " * 8) + link)
+            else:
+                print((" " * 8) + "None")
 
 
     #Parses the text file given for common words
