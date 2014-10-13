@@ -25,7 +25,7 @@ def login(login_url, session, auth_tuple):
         )
 
         #Perform the login
-        login_response = session.post(login_url, data=login_data)
+        session.post(login_url, data=login_data)
 
 """
 Returns the URL without url parameters on it.
